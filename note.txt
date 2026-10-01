@@ -1,0 +1,13 @@
+// TABLE NAME:
+//   file_metadata
+//
+// TABLE SCHEMA:
+//   id TEXT NOT NULL PRIMARY KEY
+//   relFilePath TEXT NOT NULL
+//   mimeType TEXT NOT NULL
+//   sizeBytes INTEGER NOT NULL
+//   sha256Hash TEXT NOT NULL
+//   updatedTime TEXT NOT NULL
+
+// UPLOAD_FILE_METADATA_STMT = INSERT INTO file_metadata (id, relFilePath, mimeType, sizeBytes, sha256Hash, updatedTime) VALUES (?, ?, ?, ?, ?, ?)
+// GET_FILE_METADATA_STMT = SELECT * FROM file_metadata WHERE id = ?
