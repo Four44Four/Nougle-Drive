@@ -1,0 +1,15 @@
+ - Add TOTP opt-in verification page
+    - Modify Login.tsx to account for if the user has 2fa or no-2fa
+ - Rename current branch `supabase-test`
+ - Make a new branch `actual-supabase`
+ - Add basic flat file blob uploading support
+    - Files should be downloadable
+    - Files should be previewable
+ - Research how adjacency list directory tree implementation works
+    - Implement it in PostgreSQL (integrate with file blobs, by default they will all be at the root directory)
+    - Add file directory moving/renaming
+ - Make a Clack + Woo microservice for processing file blobs with a Docker container's built-in tools at the native level
+    - Supabase backend communicates with it remotely (HTTP ?)
+ - Add access code account creation guard into branch `supabase-test`
+    - Then add it to `actual-supabase`
+ - Make the frontend of `actual-supabase` not look horrible (make it blue themed by default)
