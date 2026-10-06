@@ -24,4 +24,5 @@ if npx supabase status > /dev/null 2>&1; then
 else
   echo -e "${YELLOW}Starting up Supabase instance${RESET}"
   npx supabase start
+  ./apply-supabase-rate-limiting.sh
 fi
