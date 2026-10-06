@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from '@supabase/supabase-js';
 
 import type { Database } from "./types/supabase"
 import Login from "./Login";
 import Account from "./Account";
+import * as BEUtil from "./BackendUtil";
 
 const supabaseClient = createClient<Database>(import.meta.env.VITE_SUPABASE_URL,
                                               import.meta.env.VITE_SUPABASE_KEY
@@ -20,6 +21,18 @@ export default function () {
   const [curPage, setCurPage] = useState<Page>("login");
   const [curAccountId, setCurAccountId] = useState<string | null>(null);
   const [curUsername, setCurUsername] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const sessionRes = await BEUtil.getSessionUser(supabaseClient);
+      if (!(sessionRes instanceof Error) && sessionRes !== null) {
+        // console.log(" >> " + JSON.stringify(sessionRes));
+        setCurPage("account");
+        setCurAccountId(sessionRes.user.id);
+        setCurUsername(sessionRes.user.user_metadata.username);
+      }
+    })();
+  }, []);
 
   switch (curPage) {
     case "login": return <Login supabaseClient={supabaseClient} setCurPage={setCurPage} setCurAccountId={setCurAccountId!} setCurUsername={setCurUsername!} />;

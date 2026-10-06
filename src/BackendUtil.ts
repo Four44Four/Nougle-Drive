@@ -1,4 +1,4 @@
-import { type SupabaseClient } from "@supabase/supabase-js";
+import { type SupabaseClient, type Session } from "@supabase/supabase-js";
 
 import type { Database, Tables } from "./types/supabase"
 
@@ -47,11 +47,29 @@ export async function signInUser(
   }
 }
 
-// export async function signOutUser(
-//   supabaseClientIn: SupabaseClient<Database>,
-// ): Promise<true | Error> {
-  
-// }
+// returns `true` if the sign-out succeeded
+//         or an Error if not
+export async function signOutUser(
+  supabaseClientIn: SupabaseClient<Database>,
+): Promise<true | Error> {
+  const { error } = await supabaseClientIn.auth.signOut();
+  if (error) {
+    return new Error(`Sign-out failed: ${JSON.stringify(error)}`);
+  } else {
+    return true;
+  }
+}
+
+export async function getSessionUser(
+  supabaseClientIn: SupabaseClient<Database>,
+): Promise<Session | null | Error> {
+  const { data, error } = await supabaseClientIn.auth.getSession();
+  if (error) {
+    return error;
+  } else {
+    return data.session;
+  }
+}
 
 // returns the new Foo object if the create succeeded
 //         or an Error if not

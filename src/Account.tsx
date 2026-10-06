@@ -28,6 +28,16 @@ export default function ({ supabaseClient, setCurPage, curAccountId, curUsername
     })();
   }, []);
 
+  const onSignOut = async () => {
+    const signOutRes = await BEUtil.signOutUser(supabaseClient);
+    if (signOutRes instanceof Error) {
+      alert(signOutRes.message);
+    } else {
+      alert("Signed out successfully");
+      window.location.reload();
+    }
+  }
+
   const onDelete = async (fooIdIn: number) => {
     const deleteRes = await BEUtil.deleteFoo(supabaseClient, fooIdIn);
     if (deleteRes instanceof Error) {
@@ -56,6 +66,12 @@ export default function ({ supabaseClient, setCurPage, curAccountId, curUsername
   return (
     <div>
       <h1>ACCOUNT: {curUsername}</h1>
+      <button onClick={onSignOut}>
+        Sign out
+      </button>
+
+      <br />
+
       <input ref={fooContentRef} type="text" placeholder="Foo content here..." />
       <button onClick={onAdd}>
         Add new Foo
