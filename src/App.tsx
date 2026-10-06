@@ -22,8 +22,8 @@ export default function () {
   const [curUsername, setCurUsername] = useState<string | null>(null);
 
   switch (curPage) {
-    case "login": return <Login supabaseClient={supabaseClient} setCurPage={setCurPage} setCurAccountId={setCurAccountId} setCurUsername={setCurUsername} />;
-    case "account": return <Account supabaseClient={supabaseClient} setCurPage={setCurPage} curAccountId={curAccountId} curUsername={curUsername} />;
+    case "login": return <Login supabaseClient={supabaseClient} setCurPage={setCurPage} setCurAccountId={setCurAccountId!} setCurUsername={setCurUsername!} />;
+    case "account": return <Account supabaseClient={supabaseClient} setCurPage={setCurPage} curAccountId={curAccountId!} curUsername={curUsername!} />;
     default: return <div><h1>INVALID PAGE</h1></div>;
   }
 

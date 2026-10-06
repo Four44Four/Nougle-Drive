@@ -47,21 +47,28 @@ export async function signInUser(
   }
 }
 
-// returns `true` if the create succeeded
+// export async function signOutUser(
+//   supabaseClientIn: SupabaseClient<Database>,
+// ): Promise<true | Error> {
+  
+// }
+
+// returns the new Foo object if the create succeeded
 //         or an Error if not
 export async function createFoo(
   supabaseClientIn: SupabaseClient<Database>,
   userIdIn: string,
   contentIn: string,
-): Promise<true | Error> {
-  const { error } = await supabaseClientIn
+): Promise<Foo | Error> {
+  const { data, error } = await supabaseClientIn
     .from("foos")
-    .insert([{ user_id: userIdIn , content: contentIn }]);
+    .insert([{ user_id: userIdIn, content: contentIn }])
+    .select();
 
   if (error) {
     return new Error(`Create failed: ${JSON.stringify(error)}`);
   } else {
-    return true;
+    return data[0];
   }
 }
 
