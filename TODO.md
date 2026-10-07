@@ -1,5 +1,3 @@
- - Rename current branch `supabase-test`
- - Make a new branch `actual-supabase`
  - Add basic flat file blob uploading support
     - Files should be downloadable
     - Files should be previewable
