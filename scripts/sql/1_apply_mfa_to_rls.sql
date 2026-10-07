@@ -34,8 +34,14 @@ CREATE POLICY mfa_enforcement ON profiles
   TO authenticated
   USING (internal.is_fully_verified());
 
-DROP POLICY IF EXISTS mfa_enforcement ON foos;
-CREATE POLICY mfa_enforcement ON foos
+-- DROP POLICY IF EXISTS mfa_enforcement ON foos;
+-- CREATE POLICY mfa_enforcement ON foos
+--   AS RESTRICTIVE
+--   TO authenticated
+--   USING (internal.is_fully_verified());
+
+DROP POLICY IF EXISTS mfa_enforcement ON files;
+CREATE POLICY mfa_enforcement ON files
   AS RESTRICTIVE
   TO authenticated
   USING (internal.is_fully_verified());
