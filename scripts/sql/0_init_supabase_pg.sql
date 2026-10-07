@@ -15,7 +15,7 @@ CREATE SCHEMA IF NOT EXISTS internal;
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE foos ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS profiless_self_manage ON profiles;
+DROP POLICY IF EXISTS profiles_self_manage ON profiles;
 CREATE POLICY profiles_self_manage ON profiles
   FOR ALL
   TO authenticated

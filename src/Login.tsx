@@ -3,16 +3,26 @@ import { type SupabaseClient } from "@supabase/supabase-js";
 
 import { type Database } from "./types/supabase";
 import * as BEUtil from "./BackendUtil";
-import { type Page } from "./App";
+import { type Page, checkIfEnrolled } from "./App";
 
 type PageProps = {
   supabaseClient: SupabaseClient<Database>;
   setCurPage: Dispatch<SetStateAction<Page>>;
   setCurAccountId: Dispatch<SetStateAction<string | null>>;
   setCurUsername: Dispatch<SetStateAction<string | null>>;
+  setIsSignedIn: Dispatch<SetStateAction<boolean>>;
+  setWasEnrolled: Dispatch<SetStateAction<boolean>>;
+  setPostMFAPage: Dispatch<SetStateAction<Page>>;
+  setPostMFAAccountId: Dispatch<SetStateAction<string | null>>;
+  setPostMFAUsername: Dispatch<SetStateAction<string | null>>;
+  setMFAFactorId: Dispatch<SetStateAction<string | null>>;
 };
 
-export default function ({ supabaseClient, setCurPage, setCurAccountId, setCurUsername }: PageProps) {
+export default function ({ supabaseClient, setCurPage, setCurAccountId, setCurUsername,
+                           setIsSignedIn, setWasEnrolled,
+                           setPostMFAPage, setPostMFAAccountId, setPostMFAUsername,
+                           setMFAFactorId,
+                         }: PageProps) {
   const usernameRef = useRef<HTMLInputElement | null>(null);
   const passwordRef = useRef<HTMLInputElement | null>(null);
 
@@ -25,9 +35,22 @@ export default function ({ supabaseClient, setCurPage, setCurAccountId, setCurUs
     if (registerRes instanceof Error) {
       alert(registerRes.message);
     } else {
-      setCurPage("account");
-      setCurAccountId(registerRes);
-      setCurUsername(usernameRef.current.value);
+      const wasEnrolled = await checkIfEnrolled(supabaseClient, setWasEnrolled);
+      const factorId = await BEUtil.getUserMFAFactorID(supabaseClient);
+      if (wasEnrolled && !(factorId instanceof Error) && factorId !== null) {
+        setCurPage("challenge2fa");
+        setMFAFactorId(factorId);
+        setPostMFAPage("account");
+        setPostMFAAccountId(registerRes);
+        setPostMFAUsername(usernameRef.current.value);
+      }
+      else {
+        setIsSignedIn(true);
+
+        setCurPage("account");
+        setCurAccountId(registerRes);
+        setCurUsername(usernameRef.current.value);
+      }
     }
   };
 
@@ -40,9 +63,22 @@ export default function ({ supabaseClient, setCurPage, setCurAccountId, setCurUs
     if (signInRes instanceof Error) {
       alert(signInRes.message);
     } else {
-      setCurPage("account");
-      setCurAccountId(signInRes);
-      setCurUsername(usernameRef.current.value);
+      const wasEnrolled = await checkIfEnrolled(supabaseClient, setWasEnrolled);
+      const factorId = await BEUtil.getUserMFAFactorID(supabaseClient);
+      if (wasEnrolled && !(factorId instanceof Error) && factorId !== null) {
+        setCurPage("challenge2fa");
+        setMFAFactorId(factorId);
+        setPostMFAPage("account");
+        setPostMFAAccountId(signInRes);
+        setPostMFAUsername(usernameRef.current.value);
+      }
+      else {
+        setIsSignedIn(true);
+
+        setCurPage("account");
+        setCurAccountId(signInRes);
+        setCurUsername(usernameRef.current.value);
+      }
     }
   };
 

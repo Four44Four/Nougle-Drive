@@ -1,5 +1,3 @@
- - Add TOTP opt-in verification page
-    - Modify Login.tsx to account for if the user has 2fa or no-2fa
  - Rename current branch `supabase-test`
  - Make a new branch `actual-supabase`
  - Add basic flat file blob uploading support

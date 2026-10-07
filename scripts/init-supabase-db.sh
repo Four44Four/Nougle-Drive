@@ -16,7 +16,9 @@ if [ ! -d "supabase/migrations" ]; then
   mkdir supabase/migrations
 fi
 
-./copy-migration.sh "init_supabase_pg.sql"
+./scripts/copy-migration.sh "0_init_supabase_pg.sql"
+sleep 1
+./scripts/copy-migration.sh "1_apply_mfa_to_rls.sql"
 
 if npx supabase status > /dev/null 2>&1; then
   echo -e "${YELLOW}Supabase already up, applying migrations...${RESET}"
@@ -24,5 +26,6 @@ if npx supabase status > /dev/null 2>&1; then
 else
   echo -e "${YELLOW}Starting up Supabase instance${RESET}"
   npx supabase start
-  ./apply-supabase-rate-limiting.sh
+  ./scripts/apply-supabase-rate-limiting.sh
+  ./scripts/apply-supabase-totp-enroll-verify.sh
 fi
