@@ -62,6 +62,26 @@ GRANT SELECT, UPDATE (username) ON profiles TO authenticated;
 -- `authenticated`s can do anything **except** arbitrarily UPDATE (their own) `files` records
 GRANT SELECT, INSERT, DELETE ON files TO authenticated;
 
+
+CREATE OR REPLACE FUNCTION internal.create_new_file()
+RETURNS TRIGGER
+AS $$
+BEGIN
+  INSERT INTO public.files (storage_obj_id, filename, user_id)
+    VALUES (NEW.id, NEW.name, NEW.owner);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+REVOKE EXECUTE ON FUNCTION internal.create_new_file() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION internal.create_new_file() TO service_role, supabase_auth_admin;
+
+CREATE OR REPLACE TRIGGER on_storage_obj_create
+  AFTER INSERT ON storage.objects
+  FOR EACH ROW
+  EXECUTE FUNCTION internal.create_new_file();
+
+
 CREATE OR REPLACE FUNCTION get_all_users()
 RETURNS SETOF profiles 
 AS $$
