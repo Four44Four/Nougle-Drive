@@ -1,9 +1,11 @@
- - Add basic flat file blob uploading support
-    - Files should be downloadable
-    - Files should be previewable
  - Research how adjacency list directory tree implementation works
     - Implement it in PostgreSQL (integrate with file blobs, by default they will all be at the root directory)
     - Add file directory moving/renaming
+ - Allow for users to see which other users there are
+ - Allow for users to:
+    - Make a file completely private
+    - Make a file completely public
+    - Share a file with other specific users
  - Make a Clack + Woo microservice for processing file blobs with a Docker container's built-in tools at the native level
     - Supabase backend communicates with it remotely (HTTP ?)
  - Add access code account creation guard into branch `supabase-test`

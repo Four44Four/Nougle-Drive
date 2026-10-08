@@ -2,7 +2,12 @@ import type { SupabaseClient, Session, Factor, AuthMFAEnrollTOTPResponse } from 
 
 import type { Database, Tables } from "./types/supabase";
 
-export type Foo = Tables<"foos">;
+export type StorageFile = {
+  ownerUserId: string;
+  fileName: string; // should be the base file name (without the prefixed user id)
+  fileSignedUrl: string | null;
+  createdAt: string; // ISO 8601 date
+}
 
 // returns a string with the user ID if the registration was successful
 //         or an Error if not
@@ -181,58 +186,228 @@ export async function isClientMFAVerified(
   }
 }
 
-// returns the new Foo object if the create succeeded
+const TARGET_BUCKET = "main_files";
+// expires in 10 mins
+const FILE_ACCESS_SECS = 600;
+
+// returns the new `StorageFile` if the upload succeeded
 //         or an Error if not
-export async function createFoo(
+export async function uploadFile(
   supabaseClientIn: SupabaseClient<Database>,
   userIdIn: string,
-  contentIn: string,
-): Promise<Foo | Error> {
+  fileIn: File,
+): Promise<StorageFile | Error> {
+  const storageFileName = userIdIn + "-" + fileIn.name;
+
   const { data, error } = await supabaseClientIn
-    .from("foos")
-    .insert([{ user_id: userIdIn, content: contentIn }])
-    .select();
+    .storage
+    .from("main_files")
+    .upload(storageFileName, fileIn, {
+      // cacheControl: "3600", // 1 hr cache,
+      upsert: true,
+  });
 
   if (error) {
-    return new Error(`Create failed: ${JSON.stringify(error)}`);
+    return new Error(`Upload failed: ${JSON.stringify(error)}`)
   } else {
-    return data[0];
+    const { data: signedData, error: signedError } = await supabaseClientIn
+      .storage
+      .from(TARGET_BUCKET)
+      .createSignedUrl(storageFileName, FILE_ACCESS_SECS);
+
+    const { data: fileData, error: fileError } = await supabaseClientIn
+      .schema("storage" as any)
+      .from("objects")
+      .select("created_at")
+      .eq("bucket_id", TARGET_BUCKET)
+      .eq("name", storageFileName)
+      .single()
+
+
+    if (signedError) {
+      return new Error(`Failed to retrieve the signed url for some reason: ${JSON.stringify(signedError)}`);
+    }
+    else if (fileError) {
+      return new Error(`Failed to retrieve the created_at value for some reason: ${JSON.stringify(fileError)}`);
+    }
+    else {
+      return {
+        ownerUserId: userIdIn,
+        fileName: fileIn.name,
+        fileSignedUrl: signedData.signedUrl,
+        createdAt: fileData.created_at,
+      };
+    }
   }
 }
 
+// // returns the new Foo object if the create succeeded
+// //         or an Error if not
+// export async function createFoo(
+//   supabaseClientIn: SupabaseClient<Database>,
+//   userIdIn: string,
+//   contentIn: string,
+// ): Promise<Foo | Error> {
+//   const { data, error } = await supabaseClientIn
+//     .from("foos")
+//     .insert([{ user_id: userIdIn, content: contentIn }])
+//     .select();
+
+//   if (error) {
+//     return new Error(`Create failed: ${JSON.stringify(error)}`);
+//   } else {
+//     return data[0];
+//   }
+// }
+
 // returns `true` if the delete succeeded
 //         or an Error if not
-export async function deleteFoo(
+export async function deleteFile(
   supabaseClientIn: SupabaseClient<Database>,
-  fooIdIn: number,
+  userIdIn: string,
+  fileNameIn: string,
 ): Promise<true | Error> {
-  const { error } = await supabaseClientIn
-    .from("foos")
-    .delete()
-    .eq("id", fooIdIn);
+  const { data, error } = await supabaseClientIn
+    .storage
+    .from("main_files")
+    .remove([userIdIn + "-" + fileNameIn]);
 
   if (error) {
-    return new Error(`Delete failed: ${JSON.stringify(error)}`);
+    return new Error(`Delete failed: ${JSON.stringify(error)}`)
   } else {
     return true;
   }
 }
 
-// returns an array of `Foo`s if read succeeded
+// // returns `true` if the delete succeeded
+// //         or an Error if not
+// export async function deleteFoo(
+//   supabaseClientIn: SupabaseClient<Database>,
+//   fooIdIn: number,
+// ): Promise<true | Error> {
+//   const { error } = await supabaseClientIn
+//     .from("foos")
+//     .delete()
+//     .eq("id", fooIdIn);
+
+//   if (error) {
+//     return new Error(`Delete failed: ${JSON.stringify(error)}`);
+//   } else {
+//     return true;
+//   }
+// }
+
+// returns a `StorageFile` if read succeeded
 //         or an Error if not
-export async function readFoos(
+export async function readFile(
   supabaseClientIn: SupabaseClient<Database>,
   userIdIn: string,
-): Promise<Foo[] | Error> {
-  const { data, error } = await supabaseClientIn
-    .from("foos")
-    .select("*")
-    .eq("user_id", userIdIn)
-    .order("created_at", { ascending: false });
+  fileNameIn: string,
+): Promise<StorageFile | Error> {
+  const targetFileName = userIdIn + "-" + fileNameIn;
 
-  if (error) {
-    return new Error(`Read failed: ${JSON.stringify(error)}`);
-  } else {
-    return data;
+  const { data: signedData, error: signedError } = await supabaseClientIn
+    .storage
+    .from(TARGET_BUCKET)
+    .createSignedUrl(targetFileName, FILE_ACCESS_SECS)
+
+  const { data: fileData, error: fileError } = await supabaseClientIn
+    .schema("storage" as any)
+    .from("objects")
+    .select("created_at")
+    .eq("bucket_id", TARGET_BUCKET)
+    .eq("name", targetFileName)
+    .single()
+
+  if (signedError) {
+    return new Error(`Read failed: ${JSON.stringify(signedError)}`);
+  }
+  else if (fileError){
+    return new Error(`Read failed: ${JSON.stringify(fileError)}`);
+  }
+  else {
+    return {
+      ownerUserId: userIdIn,
+      fileName: fileNameIn,
+      fileSignedUrl: signedData.signedUrl,
+      createdAt: fileData.created_at,
+    };
   }
 }
+
+// returns an array of `StorageFile`s if read succeeded
+//         or an Error if not
+export async function readAllFiles(
+  supabaseClientIn: SupabaseClient<Database>,
+  userIdIn: string,
+): Promise<StorageFile[] | Error> {
+  let keepRequesting = true;
+  let curOffset = 0;
+  // { name, created_at }
+  const fileList = [];
+  const limit = 100;
+
+  while (keepRequesting) {
+    const { data, error } = await supabaseClientIn
+      .schema("storage" as any)
+      .from("objects")
+      .select("name, created_at")
+      .eq("bucket_id", TARGET_BUCKET)
+      .order("created_at", { ascending: false })
+      .range(curOffset, curOffset + limit - 1);
+
+    if (error) {
+      return new Error(`Read all failed: ${JSON.stringify(error)}`);
+    }
+
+    for (let i = 0; i < data.length; i++) {
+      fileList.push(data[i]);
+    }
+
+    if (data.length < limit) {
+      keepRequesting = false;
+    } else {
+      curOffset += limit;
+    }
+  }
+
+  if (fileList.length === 0) {
+    return [];
+  }
+
+  const { data: signedUrlsData, error: signedUrlsError } = await supabaseClientIn
+    .storage
+    .from(TARGET_BUCKET)
+    .createSignedUrls(fileList.map((curFile: any) => curFile.name),
+                      FILE_ACCESS_SECS);
+
+  if (signedUrlsError) {
+    return new Error(`Read all failed: ${JSON.stringify(signedUrlsError)}`);
+  }
+
+  return fileList.map((curFile: any, curIndex: number) => ({
+    ownerUserId: userIdIn,
+    fileName: curFile.name.substring(37),
+    fileSignedUrl: signedUrlsData[curIndex]?.signedUrl ?? null,
+    createdAt: curFile.created_at,
+  }));
+}
+
+// // returns an array of `Foo`s if read succeeded
+// //         or an Error if not
+// export async function readFoos(
+//   supabaseClientIn: SupabaseClient<Database>,
+//   userIdIn: string,
+// ): Promise<Foo[] | Error> {
+//   const { data, error } = await supabaseClientIn
+//     .from("foos")
+//     .select("*")
+//     .eq("user_id", userIdIn)
+//     .order("created_at", { ascending: false });
+
+//   if (error) {
+//     return new Error(`Read failed: ${JSON.stringify(error)}`);
+//   } else {
+//     return data;
+//   }
+// }

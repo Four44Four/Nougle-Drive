@@ -23,20 +23,7 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "foos": {
-                  Row: {
-                    "content": string,"created_at": string | null,"id": number,"user_id": string
-                  }
-                  Insert: {
-                    "content": string,"created_at"?: string | null,"id"?: number,"user_id": string
-                  }
-                  Update: {
-                    "content"?: string,"created_at"?: string | null,"id"?: number,"user_id"?: string
-                  }
-                  Relationships: [
-                    
-                  ]
-                },"profiles": {
+            "profiles": {
                   Row: {
                     "user_id": string,"username": string
                   }
