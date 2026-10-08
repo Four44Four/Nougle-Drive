@@ -6,9 +6,9 @@ RESET="\e[0m"
 set -euo pipefail
 
 # use env vars from `.env`
-if [ -f .env ]; then
+if [ -f ".env" ]; then
     set -a
-    source .env
+    source "./.env"
     set +a
 else
     echo -e "${RED}.env file not found${RESET}"
@@ -40,7 +40,8 @@ else
   "name": "$BUCKET_NAME",
   "public": false
 }
-EOF)
+EOF
+)
 
   if [ "$CREATE_STATUS_CODE" -eq 200 ]; then
     echo -e "\n${GREEN}Bucket '$BUCKET_NAME' successfully created${RESET}"

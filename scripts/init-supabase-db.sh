@@ -16,11 +16,13 @@ if [ ! -d "supabase/migrations" ]; then
   mkdir supabase/migrations
 fi
 
-./scripts/copy-migration.sh "0_init_supabase_pg.sql"
-sleep 1
-./scripts/copy-migration.sh "1_apply_mfa_to_rls.sql"
-sleep 1
-./scripts/copy-migration.sh "2_apply_rls_to_storage_bucket.sql"
+# copy all SQL files in scripts/sql/ into supabase/migrations/
+for cur_file in $(ls -v "scripts/sql"); do
+  if [ -f "scripts/sql/$cur_file" ]; then
+    ./scripts/copy-migration.sh "$cur_file"
+    sleep 1
+  fi
+done
 
 if npx supabase status > /dev/null 2>&1; then
   echo -e "${YELLOW}Supabase already up, applying migrations...${RESET}"
