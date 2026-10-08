@@ -29,3 +29,5 @@ else
   ./scripts/apply-supabase-rate-limiting.sh
   ./scripts/apply-supabase-totp-enroll-verify.sh
 fi
+
+./scripts/create-supabase-storage-bucket.sh

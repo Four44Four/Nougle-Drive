@@ -14,3 +14,5 @@
     - `VITE_SUPABASE_URL=http://127.0.0.1:54321`
     - `VITE_SUPABASE_KEY=sb_publishable_<...>`
        - Find this publishable key from `npx supabase status`
+    - `SUPABASE_SERVICE_SECRET_KEY=<...>`
+       - Find this secret key from the Authentication Keys section of `npx supabase status`
