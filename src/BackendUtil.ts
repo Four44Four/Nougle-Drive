@@ -241,25 +241,6 @@ export async function uploadFile(
   }
 }
 
-// // returns the new Foo object if the create succeeded
-// //         or an Error if not
-// export async function createFoo(
-//   supabaseClientIn: SupabaseClient<Database>,
-//   userIdIn: string,
-//   contentIn: string,
-// ): Promise<Foo | Error> {
-//   const { data, error } = await supabaseClientIn
-//     .from("foos")
-//     .insert([{ user_id: userIdIn, content: contentIn }])
-//     .select();
-
-//   if (error) {
-//     return new Error(`Create failed: ${JSON.stringify(error)}`);
-//   } else {
-//     return data[0];
-//   }
-// }
-
 // returns `true` if the delete succeeded
 //         or an Error if not
 export async function deleteFile(
@@ -278,24 +259,6 @@ export async function deleteFile(
     return true;
   }
 }
-
-// // returns `true` if the delete succeeded
-// //         or an Error if not
-// export async function deleteFoo(
-//   supabaseClientIn: SupabaseClient<Database>,
-//   fooIdIn: number,
-// ): Promise<true | Error> {
-//   const { error } = await supabaseClientIn
-//     .from("foos")
-//     .delete()
-//     .eq("id", fooIdIn);
-
-//   if (error) {
-//     return new Error(`Delete failed: ${JSON.stringify(error)}`);
-//   } else {
-//     return true;
-//   }
-// }
 
 // returns a `StorageFile` if read succeeded
 //         or an Error if not
@@ -392,22 +355,3 @@ export async function readAllFiles(
     createdAt: curFile.created_at,
   }));
 }
-
-// // returns an array of `Foo`s if read succeeded
-// //         or an Error if not
-// export async function readFoos(
-//   supabaseClientIn: SupabaseClient<Database>,
-//   userIdIn: string,
-// ): Promise<Foo[] | Error> {
-//   const { data, error } = await supabaseClientIn
-//     .from("foos")
-//     .select("*")
-//     .eq("user_id", userIdIn)
-//     .order("created_at", { ascending: false });
-
-//   if (error) {
-//     return new Error(`Read failed: ${JSON.stringify(error)}`);
-//   } else {
-//     return data;
-//   }
-// }

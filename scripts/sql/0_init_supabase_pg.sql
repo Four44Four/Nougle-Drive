@@ -3,26 +3,9 @@ CREATE TABLE IF NOT EXISTS profiles (
   username VARCHAR(25) UNIQUE NOT NULL
 );
 
--- CREATE TABLE IF NOT EXISTS files (
---   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
---   storage_obj_id UUID UNIQUE REFERENCES storage.objects(id) ON DELETE CASCADE,
---   filename TEXT NOT NULL,
---   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
---   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
--- );
-
--- CREATE TABLE IF NOT EXISTS foos (
---   id SERIAL PRIMARY KEY,
---   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
---   content TEXT NOT NULL,
---   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
--- );
-
 CREATE SCHEMA IF NOT EXISTS internal;
 
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE foos ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE files ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS profiles_self_manage ON profiles;
 CREATE POLICY profiles_self_manage ON profiles
@@ -31,56 +14,12 @@ CREATE POLICY profiles_self_manage ON profiles
   USING (user_id = auth.uid())
   WITH CHECK (user_id = auth.uid());
 
--- DROP POLICY IF EXISTS foos_self_manage ON foos;
--- CREATE POLICY foos_self_manage ON foos
---   FOR ALL
---   TO authenticated
---   USING (user_id = auth.uid())
---   WITH CHECK (user_id = auth.uid());
-
--- CREATE POLICY files_self_manage ON files
---   FOR ALL
---   TO authenticated
---   USING (user_id = auth.uid())
---   WITH CHECK (user_id = auth.uid());
-
 REVOKE ALL ON profiles FROM anon;
 REVOKE ALL ON profiles FROM authenticated;
--- REVOKE ALL ON foos FROM anon;
--- REVOKE ALL ON foos FROM authenticated;
--- REVOKE ALL ON files FROM anon;
--- REVOKE ALL ON files FROM authenticated;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 
 -- `authenticated`s can change the username of + read (their own) `profiles` records
 GRANT SELECT, UPDATE (username) ON profiles TO authenticated;
-
--- -- `authenticated`s can do anything to (their own) `foos` records
--- --                  but can only change the `content` of (their own) `foos` records
--- GRANT SELECT, INSERT, UPDATE (content), DELETE ON foos TO authenticated;
-
--- `authenticated`s can do anything **except** arbitrarily UPDATE (their own) `files` records
--- GRANT SELECT, INSERT, DELETE ON files TO authenticated;
-
-
--- CREATE OR REPLACE FUNCTION internal.create_new_file()
--- RETURNS TRIGGER
--- AS $$
--- BEGIN
---   INSERT INTO public.files (storage_obj_id, filename, user_id)
---     VALUES (NEW.id, NEW.name, NEW.owner);
---   RETURN NEW;
--- END;
--- $$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- REVOKE EXECUTE ON FUNCTION internal.create_new_file() FROM PUBLIC;
--- GRANT EXECUTE ON FUNCTION internal.create_new_file() TO service_role, supabase_auth_admin;
-
--- CREATE OR REPLACE TRIGGER on_storage_obj_create
---   AFTER INSERT ON storage.objects
---   FOR EACH ROW
---   EXECUTE FUNCTION internal.create_new_file();
-
 
 CREATE OR REPLACE FUNCTION get_all_users()
 RETURNS SETOF profiles 
